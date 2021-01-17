@@ -278,11 +278,10 @@ size_t GetCompressedByteSize(GLsizei w, GLsizei h, GLsizei d, GLenum internalfor
   return GetByteSize(w, h, d, GetBaseFormat(internalformat), GetDataType(internalformat));
 }
 
-rdcpair<uint32_t, uint32_t> GetCompressedBlockSize(GLenum internalformat)
+rdcpair<uint32_t, uint32_t> GetBlockSize(GLenum internalformat)
 {
   if(!IsCompressedFormat(internalformat))
   {
-    RDCERR("Not compressed format %s", ToStr(internalformat).c_str());
     return make_rdcpair(1u, 1u);
   }
 

@@ -1401,8 +1401,8 @@ void WrappedOpenGL::glCopyImageSubData(GLuint srcName, GLenum srcTarget, GLint s
               GetCompressedByteSize(srcLevelWidth, srcLevelHeight, 1, srcData.internalFormat);
           size_t dstSliceSize =
               GetCompressedByteSize(dstLevelWidth, dstLevelHeight, 1, dstData.internalFormat);
-          rdcpair<uint32_t, uint32_t> srcBlockSize = GetCompressedBlockSize(srcData.internalFormat);
-          rdcpair<uint32_t, uint32_t> dstBlockSize = GetCompressedBlockSize(dstData.internalFormat);
+          rdcpair<uint32_t, uint32_t> srcBlockSize = GetBlockSize(srcData.internalFormat);
+          rdcpair<uint32_t, uint32_t> dstBlockSize = GetBlockSize(dstData.internalFormat);
 
           RDCASSERT(srcWidth % srcBlockSize.first == 0);
           RDCASSERT(srcWidth % dstBlockSize.first == 0);
@@ -1422,8 +1422,7 @@ void WrappedOpenGL::glCopyImageSubData(GLuint srcName, GLenum srcTarget, GLint s
                 dstSliceSize * (dstZ + z) + dstLineSize * (dstY / (GLsizei)dstBlockSize.second);
             dstOffset +=
                 GetCompressedByteSize(dstX, (GLsizei)dstBlockSize.second, 1, dstData.internalFormat);
-            size_t blockSize = GetCompressedByteSize(srcWidth, (GLsizei)dstBlockSize.second, 1,
-                                                     srcData.internalFormat);
+            size_t blockSize = GetCompressedByteSize(srcWidth, 1, 1, srcData.internalFormat);
             bytebuf &srcCd = srcData.compressedData[srcLevel];
             bytebuf &dstCd = dstData.compressedData[dstLevel];
             for(size_t y = 0; y < (size_t)srcHeight; y += srcBlockSize.second)
@@ -1431,6 +1430,164 @@ void WrappedOpenGL::glCopyImageSubData(GLuint srcName, GLenum srcTarget, GLint s
               if(dstCd.size() < dstOffset + blockSize || srcCd.size() < srcOffset + blockSize)
                 break;
               memcpy(dstCd.data() + dstOffset, srcCd.data() + srcOffset, blockSize);
+              srcOffset += srcLineSize;
+              dstOffset += dstLineSize;
+            }
+          }
+        }
+      }
+      else if(srcData.curType != eGL_TEXTURE_1D_ARRAY && srcData.curType != eGL_TEXTURE_2D_ARRAY &&
+              srcData.curType != eGL_TEXTURE_CUBE_MAP_ARRAY)
+      {
+        // try reading back without existing compressedData
+        TextureData &dstData = m_Textures[dstrecord->GetResourceID()];
+        bool srcIsCompressed = IsCompressedFormat(srcData.internalFormat);
+        GLsizei srcLevelWidth = RDCMAX(1, srcData.width >> srcLevel);
+        GLsizei srcLevelHeight = (srcData.curType != eGL_TEXTURE_1D_ARRAY)
+                                     ? RDCMAX(1, srcData.height >> srcLevel)
+                                     : srcData.height;
+        GLsizei srcLevelDepth = (srcData.curType != eGL_TEXTURE_2D_ARRAY &&
+                                 srcData.curType != eGL_TEXTURE_CUBE_MAP_ARRAY)
+                                    ? RDCMAX(1, srcData.depth >> srcLevel)
+                                    : srcData.depth;
+        bool dstIsCompressed = IsCompressedFormat(dstData.internalFormat);
+        GLsizei dstLevelWidth = RDCMAX(1, dstData.width >> dstLevel);
+        GLsizei dstLevelHeight = (dstData.curType != eGL_TEXTURE_1D_ARRAY)
+                                     ? RDCMAX(1, dstData.height >> dstLevel)
+                                     : dstData.height;
+        GLsizei dstLevelDepth = (dstData.curType != eGL_TEXTURE_2D_ARRAY &&
+                                 dstData.curType != eGL_TEXTURE_CUBE_MAP_ARRAY)
+                                    ? RDCMAX(1, dstData.depth >> dstLevel)
+                                    : dstData.depth;
+
+        GLenum srcFmt = eGL_NONE, srcType = eGL_NONE;
+        GLenum dstFmt = eGL_NONE, dstType = eGL_NONE;
+        uint32_t size = 0;
+        if(srcIsCompressed)
+        {
+          size = (uint32_t)GetCompressedByteSize(srcLevelWidth, srcLevelHeight, srcLevelDepth,
+                                                 srcData.internalFormat);
+        }
+        else
+        {
+          srcFmt = GetBaseFormat(srcData.internalFormat);
+          srcType = GetDataType(srcData.internalFormat);
+          size = (uint32_t)GetByteSize(srcLevelWidth, srcLevelHeight, srcLevelDepth, srcFmt, srcType);
+        }
+        if(!dstIsCompressed)
+        {
+          dstFmt = GetBaseFormat(dstData.internalFormat);
+          dstType = GetDataType(dstData.internalFormat);
+        }
+        bytebuf pixels;
+        pixels.resize(size);
+        if(srcIsCompressed)
+        {
+          glGetCompressedTexImage(srcTarget, srcLevel, pixels.data());
+        }
+        else
+        {
+          glGetTexImage(srcTarget, srcLevel, srcData.internalFormat, srcData.curType, pixels.data());
+        }
+
+        if(srcX == 0 && srcY == 0 && srcZ == 0 && dstX == 0 && dstY == 0 && dstZ == 0 &&
+           srcLevelWidth == dstLevelWidth && srcLevelHeight == dstLevelHeight &&
+           srcLevelDepth == dstLevelDepth)
+        {
+          dstData.compressedData[dstLevel] = pixels;
+        }
+        else
+        {
+          size_t srcSliceSize =
+              srcIsCompressed
+                  ? GetCompressedByteSize(srcLevelWidth, srcLevelHeight, 1, srcData.internalFormat)
+                  : GetByteSize(srcLevelWidth, srcLevelHeight, 1, srcFmt, srcType);
+          size_t dstSliceSize =
+              dstIsCompressed
+                  ? GetCompressedByteSize(dstLevelWidth, dstLevelHeight, 1, dstData.internalFormat)
+                  : GetByteSize(dstLevelWidth, dstLevelHeight, 1, dstFmt, dstType);
+          rdcpair<uint32_t, uint32_t> srcBlockSize = GetBlockSize(srcData.internalFormat);
+          rdcpair<uint32_t, uint32_t> dstBlockSize = GetBlockSize(dstData.internalFormat);
+
+          RDCASSERT(srcWidth % srcBlockSize.first == 0);
+          RDCASSERT(srcHeight % srcBlockSize.second == 0);
+          if(!srcIsCompressed && dstIsCompressed)
+          {
+            // Check compatible formats for copying between compressed and uncompressed internal formats
+            size_t srcPixelSize = GetByteSize(1, 1, 1, srcFmt, srcType);
+            if(srcPixelSize == 4)
+            {
+              RDCASSERT(GetCompressedByteSize(dstBlockSize.first, dstBlockSize.second, 1,
+                                              dstData.internalFormat) == 16);
+            }
+            else if(srcPixelSize == 2)
+            {
+              RDCASSERT(GetCompressedByteSize(dstBlockSize.first, dstBlockSize.second, 1,
+                                              dstData.internalFormat) == 8);
+            }
+            else
+            {
+              RDCERR("Uncompatible copying between %d and %d", srcData.internalFormat,
+                     dstData.internalFormat);
+            }
+          }
+          else if(srcIsCompressed && !dstIsCompressed)
+          {
+            size_t dstPixelSize = GetByteSize(1, 1, 1, dstFmt, dstType);
+            if(dstPixelSize == 4)
+            {
+              RDCASSERT(GetCompressedByteSize(srcBlockSize.first, srcBlockSize.second, 1,
+                                              srcData.internalFormat) == 16);
+            }
+            else if(dstPixelSize == 2)
+            {
+              RDCASSERT(GetCompressedByteSize(srcBlockSize.first, srcBlockSize.second, 1,
+                                              srcData.internalFormat) == 8);
+            }
+            else
+            {
+              RDCERR("Uncompatible copying between %d and %d", srcData.internalFormat,
+                     dstData.internalFormat);
+            }
+          }
+          else
+          {
+            RDCASSERT(srcWidth % dstBlockSize.first == 0);
+            RDCASSERT(srcHeight % dstBlockSize.second == 0);
+          }
+          for(size_t z = 0; z < (size_t)srcDepth; z++)
+          {
+            size_t srcLineSize =
+                srcIsCompressed
+                    ? GetCompressedByteSize(srcLevelWidth, (GLsizei)srcBlockSize.second, 1,
+                                            srcData.internalFormat)
+                    : GetByteSize(srcLevelWidth, (GLsizei)srcBlockSize.second, 1, srcFmt, srcType);
+            size_t dstLineSize =
+                dstIsCompressed
+                    ? GetCompressedByteSize(dstLevelWidth, (GLsizei)dstBlockSize.second, 1,
+                                            dstData.internalFormat)
+                    : GetByteSize(dstLevelWidth, (GLsizei)dstBlockSize.second, 1, dstFmt, dstType);
+            size_t srcOffset =
+                srcSliceSize * (srcZ + z) + srcLineSize * (srcY / (GLsizei)srcBlockSize.second);
+            srcOffset += srcIsCompressed
+                             ? GetCompressedByteSize(srcX, (GLsizei)srcBlockSize.second, 1,
+                                                     srcData.internalFormat)
+                             : GetByteSize(srcX, (GLsizei)srcBlockSize.second, 1, srcFmt, srcType);
+            size_t dstOffset =
+                dstSliceSize * (dstZ + z) + dstLineSize * (dstY / (GLsizei)dstBlockSize.second);
+            dstOffset += dstIsCompressed
+                             ? GetCompressedByteSize(dstX, (GLsizei)dstBlockSize.second, 1,
+                                                     dstData.internalFormat)
+                             : GetByteSize(dstX, (GLsizei)dstBlockSize.second, 1, dstFmt, dstType);
+            size_t blockSize = srcIsCompressed
+                                   ? GetCompressedByteSize(srcWidth, 1, 1, srcData.internalFormat)
+                                   : GetByteSize(srcWidth, 1, 1, srcFmt, srcType);
+            bytebuf &dstCd = dstData.compressedData[dstLevel];
+            for(size_t y = 0; y < (size_t)srcHeight; y += srcBlockSize.second)
+            {
+              if(dstCd.size() < dstOffset + blockSize || pixels.size() < srcOffset + blockSize)
+                break;
+              memcpy(dstCd.data() + dstOffset, pixels.data() + srcOffset, blockSize);
               srcOffset += srcLineSize;
               dstOffset += dstLineSize;
             }
