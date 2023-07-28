@@ -42,6 +42,7 @@
 #include "Widgets/Extended/RDLabel.h"
 #include "Widgets/Extended/RDSplitter.h"
 #include "Windows/Dialogs/AxisMappingDialog.h"
+#include "Windows/TextureViewer.h"
 #include "ui_BufferViewer.h"
 
 struct FixedVarTag
@@ -2262,6 +2263,7 @@ BufferViewer::BufferViewer(ICaptureContext &ctx, bool meshview, QWidget *parent)
   ui->controlType->adjustSize();
 
   configureDrawRange();
+  configureDrawTexture();
 
   ui->solidShading->addItems({tr("None"), tr("Solid Colour"), tr("Flat Shaded"), tr("Secondary")});
   ui->solidShading->adjustSize();
@@ -2837,6 +2839,7 @@ void BufferViewer::OnEventChanged(uint32_t eventId)
   const ActionDescription *action = m_Ctx.CurAction();
 
   configureDrawRange();
+  configureDrawTexture();
 
   if(m_MeshView)
   {
@@ -4020,6 +4023,51 @@ void BufferViewer::configureDrawRange()
   m_Config.showWholePass = (curIndex >= 3);
 }
 
+void BufferViewer::configureDrawTexture()
+{
+  const ActionDescription *action = m_Ctx.CurAction();
+
+  int curIndex = ui->drawTexture->currentIndex();
+
+  ui->drawTexture->blockSignals(true);
+  ui->drawTexture->clear();
+  ui->drawTexture->addItem(tr("None"));
+
+  const ShaderReflection *details = Following::GetReflection(m_Ctx, ShaderStage::Pixel);
+  if(details != NULL)
+  {
+    for(int residx = 0; residx < details->readOnlyResources.count(); residx++)
+    {
+      ui->drawTexture->addItem(details->readOnlyResources[residx].name);
+    }
+    curIndex = qMax(0, qMin(details->readOnlyResources.count(), curIndex));
+  }
+  else
+  {
+    curIndex = 0;
+  }
+
+  // preserve the previously selected index
+  ui->drawTexture->setCurrentIndex(curIndex);
+  ui->drawTexture->blockSignals(false);
+
+  ui->drawTexture->adjustSize();
+
+  ui->drawTexture->setEnabled(m_CurStage == MeshDataStage::VSIn);
+
+  curIndex = ui->drawTexture->currentIndex();
+
+  m_Config.textureId = ResourceId();
+  if(m_CurStage == MeshDataStage::VSIn && curIndex > 0)
+  {
+    const ShaderBindpointMapping &mapping = Following::GetMapping(m_Ctx, ShaderStage::Pixel);
+    rdcarray<BoundResourceArray> readOnlyResources =
+        Following::GetReadOnlyResources(m_Ctx, ShaderStage::Pixel, true);
+    auto sampler = mapping.samplers[details->readOnlyResources[curIndex - 1].bindPoint];
+    m_Config.textureId = readOnlyResources[sampler.bind].resources[0].resourceId;
+  }
+}
+
 void BufferViewer::ApplyRowAndColumnDims(int numColumns, RDTableView *view, int dataColWidth)
 {
   int start = 0;
@@ -4673,6 +4721,7 @@ void BufferViewer::Reset()
   m_Output = NULL;
 
   configureDrawRange();
+  configureDrawTexture();
 
   ClearModels();
 
@@ -5731,6 +5780,7 @@ void BufferViewer::on_outputTabs_currentChanged(int index)
     m_CurStage = MeshDataStage::GSOut;
 
   configureDrawRange();
+  configureDrawTexture();
 
   on_resetCamera_clicked();
   ui->autofitCamera->setEnabled(!isCurrentRasterOut());
@@ -5825,6 +5875,13 @@ void BufferViewer::on_solidShading_currentIndexChanged(int index)
 void BufferViewer::on_drawRange_currentIndexChanged(int index)
 {
   configureDrawRange();
+
+  INVOKE_MEMFN(RT_UpdateAndDisplay);
+}
+
+void BufferViewer::on_drawTexture_currentIndexChanged(int index)
+{
+  configureDrawTexture();
 
   INVOKE_MEMFN(RT_UpdateAndDisplay);
 }

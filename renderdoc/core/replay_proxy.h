@@ -227,7 +227,7 @@ public:
       return m_Proxy->RenderHighlightBox(w, h, scale);
   }
 
-  bool RenderTexture(TextureDisplay cfg)
+  bool RenderTexture(TextureDisplay cfg, Matrix4f *texMat)
   {
     if(m_Proxy)
     {
@@ -244,7 +244,7 @@ public:
         cfg.flipY = !cfg.flipY;
       }
 
-      return m_Proxy->RenderTexture(cfg);
+      return m_Proxy->RenderTexture(cfg, texMat);
     }
 
     return false;

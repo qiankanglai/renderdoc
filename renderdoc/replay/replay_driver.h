@@ -28,6 +28,7 @@
 #include "api/replay/renderdoc_replay.h"
 #include "core/core.h"
 #include "maths/vec.h"
+#include "maths/matrix.h"
 
 template <typename T, BucketRecordType bucketType = T::BucketType>
 struct BucketForRecord
@@ -266,7 +267,7 @@ public:
 
   virtual void RenderMesh(uint32_t eventId, const rdcarray<MeshFormat> &secondaryDraws,
                           const MeshDisplay &cfg) = 0;
-  virtual bool RenderTexture(TextureDisplay cfg) = 0;
+  virtual bool RenderTexture(TextureDisplay cfg, Matrix4f* texMat = nullptr) = 0;
 
   virtual void SetCustomShaderIncludes(const rdcarray<rdcstr> &directories) = 0;
   virtual void BuildCustomShader(ShaderEncoding sourceEncoding, const bytebuf &source,

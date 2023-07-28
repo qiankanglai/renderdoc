@@ -165,7 +165,7 @@ public:
   {
     return m_Proxy->GetHistogram(m_TextureID, sub, typeCast, minval, maxval, channels, histogram);
   }
-  bool RenderTexture(TextureDisplay cfg)
+  bool RenderTexture(TextureDisplay cfg, Matrix4f *texMat)
   {
     if(cfg.resourceId != m_TextureID && cfg.resourceId != m_CustomTexID)
       cfg.resourceId = m_TextureID;
@@ -173,7 +173,7 @@ public:
     if(m_Props.localRenderer == GraphicsAPI::OpenGL)
       cfg.flipY = !cfg.flipY;
 
-    return m_Proxy->RenderTexture(cfg);
+    return m_Proxy->RenderTexture(cfg, texMat);
   }
   uint32_t PickVertex(uint32_t eventId, int32_t width, int32_t height, const MeshDisplay &cfg,
                       uint32_t x, uint32_t y)

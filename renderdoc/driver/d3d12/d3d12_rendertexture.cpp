@@ -300,7 +300,7 @@ void D3D12DebugManager::PrepareTextureSampling(ID3D12Resource *resource, CompTyp
   }
 }
 
-bool D3D12Replay::RenderTexture(TextureDisplay cfg)
+bool D3D12Replay::RenderTexture(TextureDisplay cfg, Matrix4f *texMat)
 {
   m_OutputViewport = {0, 0, (float)m_OutputWidth, (float)m_OutputHeight, 0.0f, 1.0f};
   return RenderTextureInternal(m_OutputWindows[m_CurrentOutputWindow].rtv, cfg,

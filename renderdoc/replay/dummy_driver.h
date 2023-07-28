@@ -160,7 +160,7 @@ public:
 
   void RenderMesh(uint32_t eventId, const rdcarray<MeshFormat> &secondaryDraws,
                   const MeshDisplay &cfg);
-  bool RenderTexture(TextureDisplay cfg);
+  bool RenderTexture(TextureDisplay cfg, Matrix4f *texMat);
 
   void SetCustomShaderIncludes(const rdcarray<rdcstr> &directories);
   void BuildCustomShader(ShaderEncoding sourceEncoding, const bytebuf &source, const rdcstr &entry,

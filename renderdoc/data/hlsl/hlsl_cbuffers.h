@@ -62,6 +62,7 @@ cbuffer TexDisplayVSCBuffer REG(b0)
 {
   float2 Position;
   float2 VertexScale;
+  row_major float4x4 TexViewProj;
 };
 
 cbuffer TexDisplayPSCBuffer REG(b0)

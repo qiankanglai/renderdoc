@@ -383,6 +383,27 @@
             </widget>
            </item>
            <item>
+            <widget class="Line" name="line_7">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="drawTextureLabel">
+             <property name="text">
+              <string>Texture</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="drawTexture">
+             <property name="sizeAdjustPolicy">
+              <enum>QComboBox::AdjustToContents</enum>
+             </property>
+            </widget>
+           </item>
+           <item>
             <spacer name="horizontalSpacer">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>

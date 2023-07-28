@@ -128,7 +128,7 @@ void VulkanReplay::CreateTexImageView(VkImage liveIm, const VulkanCreationInfo::
   }
 }
 
-bool VulkanReplay::RenderTexture(TextureDisplay cfg)
+bool VulkanReplay::RenderTexture(TextureDisplay cfg, Matrix4f* texMat)
 {
   auto it = m_OutputWindows.find(m_ActiveWinID);
   if(it == m_OutputWindows.end())

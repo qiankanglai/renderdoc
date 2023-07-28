@@ -1032,6 +1032,10 @@ void ReplayOutput::DisplayMesh()
   mesh.position.indexResourceId = m_pDevice->GetLiveID(mesh.position.indexResourceId);
   mesh.second.vertexResourceId = m_pDevice->GetLiveID(mesh.second.vertexResourceId);
   mesh.second.indexResourceId = m_pDevice->GetLiveID(mesh.second.indexResourceId);
+  if(mesh.textureId != ResourceId())
+  {
+    mesh.textureId = m_pDevice->GetLiveID(mesh.textureId);
+  }
 
   rdcarray<MeshFormat> secondaryDraws;
 

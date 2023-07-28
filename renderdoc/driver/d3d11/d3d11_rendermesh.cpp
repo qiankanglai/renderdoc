@@ -58,6 +58,16 @@ void D3D11Replay::RenderMesh(uint32_t eventId, const rdcarray<MeshFormat> &secon
   vertexData.ModelViewProj = projMat.Mul(camMat.Mul(axisMapMat));
   vertexData.SpriteSize = Vec2f();
   vertexData.homogenousInput = cfg.position.unproject;
+  
+  if(cfg.textureId != ResourceId())
+  {
+    TextureDisplay disp;
+
+    disp.resourceId = cfg.textureId;
+    disp.alpha = true;
+
+    RenderTexture(disp, &vertexData.ModelViewProj);
+  }
 
   Vec4f col(0.0f, 0.0f, 0.0f, 1.0f);
   ID3D11Buffer *psCBuf = GetDebugManager()->MakeCBuffer(&col, sizeof(col));

@@ -460,7 +460,7 @@ void DummyDriver::RenderMesh(uint32_t eventId, const rdcarray<MeshFormat> &secon
 {
 }
 
-bool DummyDriver::RenderTexture(TextureDisplay cfg)
+bool DummyDriver::RenderTexture(TextureDisplay cfg, Matrix4f *texMat)
 {
   return false;
 }

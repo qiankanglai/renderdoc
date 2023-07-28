@@ -224,7 +224,7 @@ public:
                          rdcstr &errors);
   void FreeCustomShader(ResourceId id);
 
-  bool RenderTexture(TextureDisplay cfg);
+  bool RenderTexture(TextureDisplay cfg, Matrix4f *texMat);
   bool RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flags);
 
   void RenderCheckerboard(FloatVector dark, FloatVector light);

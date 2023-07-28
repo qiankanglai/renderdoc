@@ -253,7 +253,7 @@ public:
   void RenderMesh(uint32_t eventId, const rdcarray<MeshFormat> &secondaryDraws,
                   const MeshDisplay &cfg);
 
-  bool RenderTexture(TextureDisplay cfg);
+  bool RenderTexture(TextureDisplay cfg, Matrix4f* texMat);
 
   void RenderCheckerboard(FloatVector dark, FloatVector light);
 
@@ -319,7 +319,7 @@ private:
 
   void SerializeImmediateContext();
 
-  bool RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flags);
+  bool RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flags, Matrix4f *texMat = nullptr);
 
   void CreateCustomShaderTex(uint32_t w, uint32_t h);
 

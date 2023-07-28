@@ -31,7 +31,7 @@
 #define OPENGL 1
 #include "data/glsl/glsl_ubos_cpp.h"
 
-bool GLReplay::RenderTexture(TextureDisplay cfg)
+bool GLReplay::RenderTexture(TextureDisplay cfg, Matrix4f *texMat)
 {
   return RenderTextureInternal(cfg, TexDisplayFlags(eTexDisplay_BlendAlpha | eTexDisplay_MipShift));
 }

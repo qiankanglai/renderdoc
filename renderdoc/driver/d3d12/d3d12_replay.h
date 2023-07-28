@@ -219,7 +219,7 @@ public:
   void RenderMesh(uint32_t eventId, const rdcarray<MeshFormat> &secondaryDraws,
                   const MeshDisplay &cfg);
 
-  bool RenderTexture(TextureDisplay cfg);
+  bool RenderTexture(TextureDisplay cfg, Matrix4f *texMat);
 
   void RenderCheckerboard(FloatVector dark, FloatVector light);
 

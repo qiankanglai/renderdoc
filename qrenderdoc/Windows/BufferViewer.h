@@ -131,6 +131,7 @@ private slots:
   void on_wireframeRender_toggled(bool checked);
   void on_solidShading_currentIndexChanged(int index);
   void on_drawRange_currentIndexChanged(int index);
+  void on_drawTexture_currentIndexChanged(int index);
   void on_controlType_currentIndexChanged(int index);
   void on_camSpeed_valueChanged(double value);
   void on_instance_valueChanged(int value);
@@ -172,6 +173,8 @@ private:
   void updateWindowTitle();
 
   void configureDrawRange();
+
+  void configureDrawTexture();
 
   void RT_UpdateAndDisplay(IReplayController *r);
 

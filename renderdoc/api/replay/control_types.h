@@ -197,6 +197,8 @@ struct MeshDisplay
   SolidShade solidShadeMode = SolidShade::NoSolid;
   DOCUMENT("``True`` if the wireframe of the mesh should be rendered as well as solid shading.");
   bool wireframeDraw = true;
+  DOCUMENT("The background texture index of mesh view in the drawcall.");
+  ResourceId textureId = ResourceId();
 
   static const uint32_t NoHighlight = ~0U;
 };

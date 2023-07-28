@@ -2832,9 +2832,9 @@ void D3D11Replay::BuildCustomShader(ShaderEncoding sourceEncoding, const bytebuf
   BuildShader(sourceEncoding, source, entry, compileFlags, m_CustomShaderIncludes, type, id, errors);
 }
 
-bool D3D11Replay::RenderTexture(TextureDisplay cfg)
+bool D3D11Replay::RenderTexture(TextureDisplay cfg, Matrix4f* texMat)
 {
-  return RenderTextureInternal(cfg, eTexDisplay_BlendAlpha);
+  return RenderTextureInternal(cfg, eTexDisplay_BlendAlpha, texMat);
 }
 
 void D3D11Replay::RenderCheckerboard(FloatVector dark, FloatVector light)

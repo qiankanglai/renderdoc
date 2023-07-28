@@ -449,7 +449,7 @@ TextureShaderDetails D3D11DebugManager::GetShaderDetails(ResourceId id, CompType
   return details;
 }
 
-bool D3D11Replay::RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flags)
+bool D3D11Replay::RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flags, Matrix4f* texMat)
 {
   TexDisplayVSCBuffer vertexData = {};
   TexDisplayPSCBuffer pixelData = {};
@@ -579,6 +579,19 @@ bool D3D11Replay::RenderTextureInternal(TextureDisplay cfg, TexDisplayFlags flag
   // normalisation factor for output * selected scale * viewport scale
   vertexData.VertexScale.x = (tex_x / m_OutputWidth) * cfg.scale * 2.0f;
   vertexData.VertexScale.y = (tex_y / m_OutputHeight) * cfg.scale * 2.0f;
+
+  if (texMat)
+  {
+    vertexData.Position.x = 1;
+    vertexData.Position.y = -1;
+    vertexData.VertexScale.x = 1;
+    vertexData.VertexScale.y = -1;
+    vertexData.TexViewProj = *texMat;
+  }
+  else
+  {
+    vertexData.TexViewProj = Matrix4f::Identity();
+  }
 
   ID3D11PixelShader *customPS = NULL;
   ID3D11Buffer *customBuffs[2] = {};
